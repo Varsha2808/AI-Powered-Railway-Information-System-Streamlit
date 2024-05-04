@@ -1,71 +1,76 @@
 import streamlit as st
 import speech_recognition as sr
 import pyttsx3
-from llm_util import LLM
+import os
+from PyPDF2 import PdfReader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain_openai import OpenAI
+from langchain_community.callbacks import get_openai_callback
 
-# Initialize LLM object
-llm_obj = LLM()
+# Set up OpenAI API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Define SpeechToText class for speech recognition
+# Initialize Streamlit app
+st.title("AI-Powered Railway Information System")
+st.write("Welcome aboard! Explore the future of railway assistance with our AI-powered system.")
+
+# Define speech recognition class
 class SpeechToText:
-    def __init__(self, lang='en'):
+    def __init__(self):
         self.r = sr.Recognizer()
-        self.language = lang
 
     def extract_text_from_speech(self):
-        with sr.Microphone() as source2:
-            st.write("Listening....")
-            self.r.adjust_for_ambient_noise(source2, duration=0.3)
-            audio2 = self.r.listen(source2)
-            try:
-                MyText = self.r.recognize_google(audio2)
-                MyText = MyText.lower()
-                return MyText
-            except sr.UnknownValueError:
-                st.error("Sorry, I could not understand what you said.")
-                return ""
-            except sr.RequestError as e:
-                st.error(f"Could not request results; {e}")
-                return ""
+        with sr.Microphone() as source:
+            st.write("Listening...")
+            self.r.adjust_for_ambient_noise(source)
+            audio = self.r.listen(source)
+            text = self.r.recognize_google(audio)
+            return text.lower()
 
-# Define TextToSpeech class for speech synthesis
+# Define text-to-speech class
 class TextToSpeech:
     def __init__(self):
         self.engine = pyttsx3.init()
 
-    def text_to_speech(self, command):
-        self.engine.say(command)
+    def speak_text(self, text):
+        self.engine.say(text)
         self.engine.runAndWait()
 
-# Define Streamlit UI
-def main():
-    st.title("AI-Powered Railway Information System")
-    st.write("Welcome aboard! Explore the future of railway assistance with our AI-powered system.")
+# Define LLM utility
+class LLM:
+    def __init__(self, openai_api_key):
+        self.openai_api_key = openai_api_key
+        # Initialize other components as needed
 
-    # Display image
-    st.image('images/steps_to_interact.png', use_column_width=True)
+    # Add other methods as needed
 
-    # Define user input section
-    query = st.text_input("Enter your query:")
-    submit_button = st.button("Submit")
+# Define functions to read PDF and process text
 
-    if submit_button:
-        response = llm_obj.answer_to_the_question(query)
-        st.write("Response:", response)
+# Initialize LLM object
+llm = LLM(openai_api_key)
 
-    # Speech-to-text functionality
-    st.write("Or, if you prefer, use the Speak button for voice interaction:")
-    speak_button = st.button("Speak")
+# Speech-to-text interaction
+speak_button = st.button("Speak")
 
-    if speak_button:
-        stt = SpeechToText()
-        query = stt.extract_text_from_speech()
-        if query:
-            response = llm_obj.answer_to_the_question(query)
-            tts = TextToSpeech()
-            tts.text_to_speech(response)
-            st.write("Query:", query)
-            st.write("Response:", response)
+if speak_button:
+    stt = SpeechToText()
+    query = stt.extract_text_from_speech()
+    response = llm.answer_to_the_question(query)
+    tts = TextToSpeech()
+    tts.speak_text(response)
+    st.write("Query:", query)
+    st.write("Response:", response)
 
-if __name__ == "__main__":
-    main()
+# Display image and other UI elements
+st.image('images/steps_to_interact.png', use_column_width=True)
+
+# Text input and response display
+query = st.text_input("Enter your query:")
+submit_button = st.button("Submit")
+
+if submit_button:
+    response = llm.answer_to_the_question(query)
+    st.write("Response:", response)
