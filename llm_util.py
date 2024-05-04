@@ -7,7 +7,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain_openai import OpenAI
 from langchain_community.callbacks import get_openai_callback
 
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+openai_api_key = os.environ.get('openai_api_key')
 
 class LLM:
     def __init__(self) -> None:

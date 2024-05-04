@@ -17,24 +17,25 @@ class SpeechToText:
             st.write("Listening....")
             self.r.adjust_for_ambient_noise(source2, duration=0.3)
             audio2 = self.r.listen(source2)
-            MyText = self.r.recognize_google(audio2)
-            MyText = MyText.lower()
-            return MyText
+            try:
+                MyText = self.r.recognize_google(audio2)
+                MyText = MyText.lower()
+                return MyText
+            except sr.UnknownValueError:
+                st.error("Sorry, I could not understand what you said.")
+                return ""
+            except sr.RequestError as e:
+                st.error(f"Could not request results; {e}")
+                return ""
 
 # Define TextToSpeech class for speech synthesis
 class TextToSpeech:
     def __init__(self):
         self.engine = pyttsx3.init()
-        self.is_engine_running = False
 
     def text_to_speech(self, command):
-        if not self.is_engine_running:
-            self.engine.startLoop(False)
-            self.is_engine_running = True
-        voices = self.engine.getProperty('voices')
-        self.engine.setProperty('voice', voices[1].id)
         self.engine.say(command)
-        self.engine.iterate()  # Process pending events
+        self.engine.runAndWait()
 
 # Define Streamlit UI
 def main():
@@ -59,11 +60,12 @@ def main():
     if speak_button:
         stt = SpeechToText()
         query = stt.extract_text_from_speech()
-        response = llm_obj.answer_to_the_question(query)
-        tts = TextToSpeech()
-        tts.text_to_speech(response)
-        st.write("Query:", query)
-        st.write("Response:", response)
+        if query:
+            response = llm_obj.answer_to_the_question(query)
+            tts = TextToSpeech()
+            tts.text_to_speech(response)
+            st.write("Query:", query)
+            st.write("Response:", response)
 
 if __name__ == "__main__":
     main()
