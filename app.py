@@ -3,7 +3,9 @@ import streamlit as st
 import speech_recognition as sr
 import pyttsx3
 from llm_util import LLM
-from tts_stt import TextToSpeech  # Import the TextToSpeech class
+# from tts_stt import TextToSpeech  # Import the TextToSpeech class
+from tts_stt import text_to_speech  # Import the text_to_speech function
+
 
 # Initialize LLM object
 llm_obj = LLM()
